@@ -3,6 +3,7 @@ import subprocess as sp
 from manim import *
 
 from matrix import MatrixObject
+from highlightcode import HighLightCode
 from constants import *
 
 class NaiveGEMMScene(Scene):
@@ -51,17 +52,7 @@ class NaiveGEMMScene(Scene):
         self.annotation = VGroup(matrix_annotation, brace, brace_annotation)
 
         # Code
-        self.code = Code(
-            code=NAIVE_GEMM,
-            tab_width=4,
-            line_spacing=0.5,
-            font_size=12,
-            font="Menlo",
-            margin=0.2,
-            line_no_buff=0.2,
-            style=Code.styles_list[42],
-            language="cuda"
-        )
+        self.code = HighLightCode(NAIVE_GEMM)
         self.selected_row, self.selected_col = 2, 2
 
     def show_cover(self):
@@ -88,22 +79,27 @@ class NaiveGEMMScene(Scene):
 
         self.A_MK = self.matrix["A"].get_row_col(self.selected_row, 0).set_fill(RED_C, 1.0)
         self.B_KN = self.matrix["B"].get_row_col(0, self.selected_col).set_fill(BLUE_C, 1.0)
-        self.C_MN = self.matrix["C"].get_row_col(self.selected_row, self.selected_col)
-        self.play(FadeIn(self.A_MK, self.B_KN, self.C_MN))
+        self.C_MN = self.matrix["C"].get_row_col(self.selected_row, self.selected_col).set_fill(WHITE, 0.0)
+        self.play(FadeIn(self.A_MK, self.B_KN, self.C_MN), self.code.highlight(4, 8))
 
         for k in range(self.K):
+            self.play(self.code.highlight(10), run_time=0.5)
             self.play(
                 self.A_MK.animate.move_to(self.matrix["A"].get_row_col(self.selected_row, k)),
                 self.B_KN.animate.move_to(self.matrix["B"].get_row_col(k, self.selected_col)),
                 run_time=0.5
             )
-            C_MN = self.C_MN.copy().set_fill(PURPLE_C, (k + 1) / self.K)
+            C_MN = self.C_MN.copy().set_fill(PURPLE_B, (k + 1) / self.K)
+            self.play(self.code.highlight(11), run_time=0.5)
             self.play(
                 Transform(self.A_MK.copy(), C_MN, path_arc=PI / 2),
                 Transform(self.B_KN.copy(), C_MN, path_arc=PI / 2),
                 run_time=0.5
             )
 
+        self.play(self.code.highlight(13), run_time=0.5)
+        self.play(Indicate(self.C_MN, scale_factor=1.25, color=PURPLE_B), run_time=0.5)
+        self.play(self.code.lowlight())
         self.wait(1)
 
 
@@ -154,17 +150,7 @@ class OptimizedGEMMV0Scene(Scene):
         self.annotation = VGroup(matrix_annotation, brace, brace_annotation)
 
         # Code
-        self.code = Code(
-            code=OPTIMIZED_GEMM_0,
-            tab_width=4,
-            line_spacing=0.5,
-            font_size=12,
-            font="Menlo",
-            margin=0.2,
-            line_no_buff=0.2,
-            style=Code.styles_list[42],
-            language="cuda"
-        )
+        self.code = HighLightCode(OPTIMIZED_GEMM_0)
         self.selected_row, self.selected_col = 2, 2
 
     def show_cover(self):
@@ -201,7 +187,7 @@ class OptimizedGEMMV0Scene(Scene):
                 self.B_KN.animate.move_to(self.matrix["B"].get_row_col(k, self.selected_col)),
                 run_time=0.5
             )
-            C_MN = self.C_MN.copy().set_fill(PURPLE_C, (k + 1) / self.K)
+            C_MN = self.C_MN.copy().set_fill(PURPLE_B, (k + 1) / self.K)
             self.play(
                 Transform(self.A_MK.copy(), C_MN, path_arc=PI / 2),
                 Transform(self.B_KN.copy(), C_MN, path_arc=PI / 2),
@@ -212,5 +198,5 @@ class OptimizedGEMMV0Scene(Scene):
 
 
 if __name__ == "__main__":
-    sp.run(["manim", "-qk", "matmul.py", "NaiveGEMMScene"])
+    sp.run(["manim", "-ql", "matmul.py", "NaiveGEMMScene"])
     # sp.run(["manim", "-ql", "matmul.py", "OptimizedGEMMV0Scene"])
